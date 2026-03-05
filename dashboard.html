@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H2 PROJECT | Dashboard Penjual</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2ecc71;
+            --primary-light: rgba(46, 204, 113, 0.1);
+            --bg-dark: #121212;
+            --bg-sidebar: #181818;
+            --bg-card: #1e1e1e;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --border: #2d2d2d;
+            --sidebar-width: 260px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar --- */
+        aside {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 30px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+            flex-grow: 1;
+        }
+
+        .menu-item {
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            color: var(--primary);
+            background: var(--primary-light);
+            border-left-color: var(--primary);
+        }
+
+        /* --- Main Content --- */
+        main {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        /* --- Top Bar --- */
+        .top-bar {
+            height: 70px;
+            background: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .btn-logout {
+            color: #ff4757;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border: 1px solid #ff4757;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #ff4757;
+            color: white;
+        }
+
+        .content-body {
+            padding: 40px;
+        }
+
+        /* --- Stats Cards --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .stat-card span { color: var(--text-muted); font-size: 0.9rem; }
+        .stat-card h2 { font-size: 1.8rem; margin-top: 10px; color: var(--primary); }
+
+        /* --- Chart Section --- */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .chart-wrapper {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-wrapper h3 { margin-bottom: 20px; font-size: 1.1rem; }
+        .chart-caption { margin-top: 15px; font-size: 0.85rem; color: var(--text-muted); }
+
+        /* --- Table Section --- */
+        .table-container {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .table-header { padding: 25px; border-bottom: 1px solid var(--border); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: #252525;
+            padding: 15px 25px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 18px 25px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status.success { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+        .status.pending { background: rgba(241, 196, 15, 0.2); color: #f1c40f; }
+
+        /* --- Mobile Responsive --- */
+        .menu-toggle { display: none; cursor: pointer; color: var(--text-main); font-size: 1.5rem; }
+
+        @media (max-width: 1024px) {
+            .charts-container { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            aside { left: -100%; }
+            aside.active { left: 0; }
+            main { margin-left: 0; width: 100%; }
+            .menu-toggle { display: block; }
+            .top-bar { padding: 0 20px; }
+            .content-body { padding: 20px; }
+            .table-container { overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside id="sidebar">
+        <div class="sidebar-header">H2 PROJECT</div>
+        <nav class="sidebar-menu">
+            <a href="#" class="menu-item active">📊 Dashboard</a>
+            <a href="#" class="menu-item">📦 Produk</a>
+            <a href="#" class="menu-item">💸 Transaksi</a>
+            <a href="#" class="menu-item">📈 Laporan</a>
+            <a href="#" class="menu-item">⚙️ Pengaturan</a>
+        </nav>
+    </aside>
+
+    <main>
+        <div class="top-bar">
+            <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+            <div class="user-info">
+                <span>Halo, <strong>Admin H2</strong></span>
+            </div>
+            <a href="#" class="btn-logout">Logout</a>
+        </div>
+
+        <div class="content-body">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span>Total Pendapatan</span>
+                    <h2>Rp 12.450.000</h2>
+                </div>
+                <div class="stat-card">
+                    <span>Total Transaksi</span>
+                    <h2>142</h2>
+                </div>
+                <div class="stat-card">
+                    <span>Produk Terjual</span>
+                    <h2>310</h2>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3>Tren Penjualan (30 Hari Terakhir)</h3>
+                    <canvas id="mainChart"></canvas>
+                    <p class="chart-caption">* Data menunjukkan volume penjualan harian dalam IDR.</p>
+                </div>
+                <div class="chart-wrapper">
+                    <h3>Performa Mingguan</h3>
+                    <canvas id="weeklyChart"></canvas>
+                    <p class="chart-caption">* Perbandingan transaksi sukses minggu ini.</p>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Transaksi Terbaru</h3>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Produk</th>
+                            <th>Email</th>
+                            <th>Nomor HP</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>DE-1709543201</td>
+                            <td>AI Prompt Pack</td>
+                            <td>user1@gmail.com</td>
+                            <td>08123456xxx</td>
+                            <td><span class="status success">Success</span></td>
+                        </tr>
+                        <tr>
+                            <td>DE-1709543255</td>
+                            <td>Video Course UI/UX</td>
+                            <td>budi.s@outlook.com</td>
+                            <td>08556789xxx</td>
+                            <td><span class="status success">Success</span></td>
+                        </tr>
+                        <tr>
+                            <td>DE-1709543310</td>
+                            <td>E-Book Digital</td>
+                            <td>siska.amelia@mail.com</td>
+                            <td>08991234xxx</td>
+                            <td><span class="status pending">Pending</span></td>
+                        </tr>
+                        <tr>
+                            <td>DE-1709543400</td>
+                            <td>AI Prompt Pack</td>
+                            <td>reza_dev@gmail.com</td>
+                            <td>08112233xxx</td>
+                            <td><span class="status success">Success</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Sidebar Toggle for Mobile
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        // --- Chart 1: Penjualan 1 Bulan ---
+        const ctxMain = document.getElementById('mainChart').getContext('2d');
+        new Chart(ctxMain, {
+            type: 'line',
+            data: {
+                labels: ['1 Mar', '5 Mar', '10 Mar', '15 Mar', '20 Mar', '25 Mar', '30 Mar'],
+                datasets: [{
+                    label: 'Pendapatan (IDR)',
+                    data: [1200000, 1900000, 1500000, 2500000, 2200000, 3100000, 3800000],
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: '#2d2d2d' }, ticks: { color: '#a0a0a0' } },
+                    x: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
+                }
+            }
+        });
+
+        // --- Chart 2: Penjualan 1 Minggu (Bar Chart) ---
+        const ctxWeekly = document.getElementById('weeklyChart').getContext('2d');
+        new Chart(ctxWeekly, {
+            type: 'bar',
+            data: {
+                labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                datasets: [{
+                    label: 'Transaksi',
+                    data: [12, 19, 13, 17, 28, 24, 32],
+                    backgroundColor: '#2ecc71',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { display: false },
+                    x: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
